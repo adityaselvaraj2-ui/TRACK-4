@@ -12,7 +12,6 @@ dist
 .DS_Store
 
 # Legacy (removed)
-src/
 .output
 .nitro
 .tanstack
