@@ -104,9 +104,15 @@ router.post("/generate", async (req, res) => {
 
       send("done", { message: assistant, toolEvents: result.toolEvents });
       res.end();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Generation failed";
-      send("error", { error: message });
+    } catch (error: any) {
+      console.error("FULL AI GENERATION ERROR:", error);
+      const message = error?.message || "An unexpected error occurred with the Gemini API.";
+      const stack = error?.stack;
+      send("error", {
+        error: "AI Generation failed.",
+        details: message,
+        stack,
+      });
       res.end();
     }
     return;
@@ -131,9 +137,15 @@ router.post("/generate", async (req, res) => {
       toolEvents: result.toolEvents,
       files: await dataService.listProjectFiles(projectId),
     });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Generation failed";
-    res.status(500).json({ error: message });
+  } catch (error: any) {
+    console.error("FULL AI GENERATION ERROR:", error);
+    const message = error?.message || "An unexpected error occurred with the Gemini API.";
+    const stack = error?.stack;
+    res.status(500).json({
+      error: "AI Generation failed.",
+      details: message,
+      stack,
+    });
   }
 });
 
