@@ -58,13 +58,30 @@ function toUserRecord(row: Record<string, unknown>): UserRecord {
   };
 }
 
+function parseToolEvents(value: unknown): ChatMessageRecord['toolEvents'] | undefined {
+  if (Array.isArray(value)) {
+    return value as ChatMessageRecord['toolEvents'];
+  }
+
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? (parsed as ChatMessageRecord['toolEvents']) : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  return undefined;
+}
+
 function toChatMessageRecord(row: Record<string, unknown>): ChatMessageRecord {
   return {
     id: String(row.id ?? uuid()),
     projectId: String(row.project_id ?? row.projectId ?? ''),
     role: (row.role as ChatMessageRecord['role']) ?? 'assistant',
     content: String(row.content ?? ''),
-    toolEvents: Array.isArray(row.tool_events) ? (row.tool_events as ChatMessageRecord['toolEvents']) : undefined,
+    toolEvents: parseToolEvents(row.tool_events ?? row.toolEvents),
     createdAt: String(row.created_at ?? row.createdAt ?? new Date().toISOString()),
   };
 }
@@ -364,7 +381,7 @@ export async function saveChatMessage(input: {
       project_id: input.projectId,
       role: input.role,
       content: input.content,
-      tool_events: input.toolEvents,
+      tool_events: input.toolEvents ? JSON.stringify(input.toolEvents) : null,
       created_at: new Date().toISOString(),
     })
     .select()
