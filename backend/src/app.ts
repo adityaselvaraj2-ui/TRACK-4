@@ -10,10 +10,36 @@ import checkpointRoutes from "./routes/checkpoints.js";
 export function createApp() {
   const app = express();
 
+  const allowedOrigins = [
+    "http://localhost:5173",
+    "https://track-4-ten.vercel.app",
+    /https:\/\/track-4.*\.vercel\.app$/,
+  ];
+
   app.use(
     cors({
-      origin: env.frontendOrigin,
+      origin: (origin, callback) => {
+        if (!origin) {
+          callback(null, true);
+          return;
+        }
+
+        const isAllowed = allowedOrigins.some((allowed) => {
+          if (allowed instanceof RegExp) {
+            return allowed.test(origin);
+          }
+          return allowed === origin;
+        });
+
+        if (isAllowed) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
       credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
     }),
   );
   app.use(express.json({ limit: "10mb" }));
